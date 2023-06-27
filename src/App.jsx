@@ -1,10 +1,12 @@
   import loader from './assets/loader.svg'
+  import browser from './assets/browser.svg'
   import './App.css'
   import { useEffect, useState } from 'react';
   const APIKEY = import.meta.env.VITE_WEATHER_API_KEY
   
   function App() {
     const [weatherData, setWeatherData] = useState(null)
+    const [errorInfo, setErrorInfo] = useState(null)
 
     useEffect(() => {
          //voir avec Charline le pb de la key
@@ -12,11 +14,10 @@
       .then(response =>{
         console.log(response);
         // console.log(APIKEY)
+        if(!response.ok) throw new Error (`Error ${response.status}, ${response.statusText}`)
         return response.json()
       })
       .then(responseData => {
-
-        console.log(responseData)
         setWeatherData({
           city: responseData.data.city,
           country: responseData.data.country,
@@ -24,15 +25,18 @@
           temperature: responseData.data.current.weather.tp,
         })
       })
+      .catch(err =>{
+        setErrorInfo(err.message)
+      })
 
     }, [])
   
     return (
 
         <main>
-      <div className={`loader-container ${!weatherData && "active"}`}>
-        <img src={loader} alt="loading icon" />
-      </div>
+        <div className={`loader-container ${(!weatherData && !errorInfo) && "active"}`}>
+          <img src={loader} alt="loading icon" />
+        </div>
 
       {weatherData && (
         <>
@@ -43,6 +47,13 @@
         <img src={`/icons/${weatherData.iconID}.svg`} alt="weather icon" className='info-icon'/>
       </div>
         </>
+        )}
+
+        {(errorInfo && !weatherData) && (
+          <>
+            <p className="error-information">{errorInfo}</p>
+            <img src={browser} alt="error icon" />
+          </>
         )}
         
         </main>
